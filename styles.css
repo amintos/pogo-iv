@@ -203,6 +203,10 @@ h2 {
   gap: 10px;
 }
 
+.attempts-list[hidden] {
+  display: none;
+}
+
 .attempts-row {
   display: grid;
   grid-template-columns: auto minmax(86px, 120px) auto minmax(110px, auto);

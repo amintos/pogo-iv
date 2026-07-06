@@ -51,6 +51,7 @@ const chanceList = document.querySelector("#chanceList");
 const referenceRow = document.querySelector("#referenceRow");
 const attemptsPanel = document.querySelector("#attemptsPanel");
 const attemptsBasis = document.querySelector("#attemptsBasis");
+const attemptsList = document.querySelector("#attemptsList");
 const attemptsInput = document.querySelector("#attemptsInput");
 const targetChanceInput = document.querySelector("#targetChanceInput");
 const attemptsChanceOutput = document.querySelector("#attemptsChanceOutput");
@@ -357,7 +358,9 @@ function updateAttemptsPanel() {
   const reference = state.pinnedReference;
 
   if (!reference) {
-    attemptsPanel.hidden = true;
+    attemptsPanel.hidden = false;
+    attemptsList.hidden = true;
+    attemptsBasis.textContent = "Pin a chance to compute";
     return;
   }
 
@@ -365,6 +368,7 @@ function updateAttemptsPanel() {
   const neededAttempts = attemptsForChance(reference.probability, state.cumulative.targetChance);
 
   attemptsPanel.hidden = false;
+  attemptsList.hidden = false;
   attemptsBasis.textContent = `${reference.titleText} · ${reference.label} · ${reference.valueText} per attempt`;
   attemptsInput.value = String(state.cumulative.attempts);
   targetChanceInput.value = formatInputNumber(state.cumulative.targetChance);
