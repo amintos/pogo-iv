@@ -239,6 +239,41 @@ h2 {
   font-weight: 900;
 }
 
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 18px 2px 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.site-footer a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--accent);
+  outline: none;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.github-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
 .chart-frame {
   position: relative;
   min-height: 420px;
@@ -551,6 +586,12 @@ h2 {
     grid-column: 2 / 3;
     grid-row: 2 / 3;
     text-align: right;
+  }
+
+  .site-footer {
+    display: grid;
+    justify-content: start;
+    padding-top: 14px;
   }
 
 }
