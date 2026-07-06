@@ -36,6 +36,14 @@ const FLOOR_CONFIGS = [
     dim: "rgba(65, 111, 189, 0.42)"
   },
   {
+    id: "shadowRaid",
+    label: "Shadow Raid",
+    floor: 6,
+    color: "#7055a8",
+    fill: "rgba(112, 85, 168, 0.14)",
+    dim: "rgba(112, 85, 168, 0.42)"
+  },
+  {
     id: "lucky",
     label: "Lucky",
     floor: 12,
@@ -263,7 +271,7 @@ function shinyRateDenominator(distribution) {
     return WILD_SHINY_RATES[state.shiny.wildRateIndex];
   }
 
-  if (distribution.id === "raid") {
+  if (distribution.id === "raid" || distribution.id === "shadowRaid") {
     return state.shiny.raidBoosted ? 10 : 20;
   }
 
@@ -299,7 +307,7 @@ function chanceTitleText() {
 
 function updateShinyControls() {
   const enabled = state.shiny.enabled;
-  const raidActive = state.selectedFloorIds.has("raid");
+  const raidActive = state.selectedFloorIds.has("raid") || state.selectedFloorIds.has("shadowRaid");
   const wildDenominator = WILD_SHINY_RATES[state.shiny.wildRateIndex];
   const raidDenominator = state.shiny.raidBoosted ? 10 : 20;
 
