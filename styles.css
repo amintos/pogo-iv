@@ -332,6 +332,16 @@ h2 {
   line-height: 1;
 }
 
+.threshold-arrow svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .threshold-arrow:hover:not(:disabled),
 .threshold-arrow:focus-visible {
   border-color: var(--accent);

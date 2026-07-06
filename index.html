@@ -19,9 +19,17 @@
         <div class="chart-frame">
           <canvas id="chart" aria-label="Graph of IV percentage relative frequencies"></canvas>
           <div class="threshold-control" id="thresholdControl" aria-label="Selected IV percentage">
-            <button class="threshold-arrow" id="thresholdPrev" type="button" title="Previous IV percentage" aria-label="Previous IV percentage">&#x1F81C;</button>
+            <button class="threshold-arrow" id="thresholdPrev" type="button" title="Previous IV percentage" aria-label="Previous IV percentage">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m15 18-6-6 6-6"></path>
+              </svg>
+            </button>
             <output id="thresholdOutput">91%</output>
-            <button class="threshold-arrow" id="thresholdNext" type="button" title="Next IV percentage" aria-label="Next IV percentage">&#x1F81E;</button>
+            <button class="threshold-arrow" id="thresholdNext" type="button" title="Next IV percentage" aria-label="Next IV percentage">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m9 18 6-6-6-6"></path>
+              </svg>
+            </button>
           </div>
         </div>
 
