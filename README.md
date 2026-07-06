@@ -23,14 +23,14 @@ and no build step.
    The highlighted part of the graph follows this choice.
 
 4. Compare IV floors.
-   Toggle IV floors such as Weather boost, Raid, Shadow Raid, and Lucky to
-   overlay their distributions and add their chance rows. Wild remains the
-   baseline.
+   Toggle IV floors such as Weather boost, Raid, and Shadow Raid to overlay
+   their distributions and add their chance rows. Open the Trade group to show
+   Lucky plus the friendship trade floors. Wild remains the baseline.
 
 5. Include shiny odds when needed.
    Enable shiny odds to multiply the relevant rows by the selected shiny rate.
    Wild and Weather boost use the wild shiny slider. Raid and Shadow Raid use
-   the raid shiny setting. Lucky is not affected by shiny odds.
+   the raid shiny setting. Trade floors are not affected by shiny odds.
 
 6. Pin a chance as a reference.
    Click the pin icon on any chance row to freeze that value. Other live rows

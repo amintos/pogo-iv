@@ -19,9 +19,9 @@
         <div class="chart-frame">
           <canvas id="chart" aria-label="Graph of IV percentage relative frequencies"></canvas>
           <div class="threshold-control" id="thresholdControl" aria-label="Selected IV percentage">
-            <button class="threshold-arrow" id="thresholdPrev" type="button" title="Previous IV percentage" aria-label="Previous IV percentage">&lt;</button>
+            <button class="threshold-arrow" id="thresholdPrev" type="button" title="Previous IV percentage" aria-label="Previous IV percentage">&#x1F81C;</button>
             <output id="thresholdOutput">91%</output>
-            <button class="threshold-arrow" id="thresholdNext" type="button" title="Next IV percentage" aria-label="Next IV percentage">&gt;</button>
+            <button class="threshold-arrow" id="thresholdNext" type="button" title="Next IV percentage" aria-label="Next IV percentage">&#x1F81E;</button>
           </div>
         </div>
 
@@ -66,22 +66,55 @@
             <span>Shadow Raid</span>
             <small>6/6/6</small>
           </label>
-          <label class="floor-option" style="--series-color: #b14c8f;">
-            <input type="checkbox" value="lucky" data-floor-toggle>
-            <span class="floor-swatch" aria-hidden="true"></span>
-            <span>Lucky</span>
-            <small>12/12/12</small>
-          </label>
+          <div class="trade-group">
+            <button class="trade-toggle" id="tradeToggle" type="button" aria-expanded="false" aria-controls="tradeFloorList">
+              <span class="trade-indicator" id="tradeIndicator" aria-hidden="true">▸</span>
+              <span>Trade</span>
+              <small>5 floors</small>
+            </button>
+            <div class="trade-floor-list" id="tradeFloorList" hidden>
+              <label class="floor-option" style="--series-color: #b14c8f;">
+                <input type="checkbox" value="lucky" data-floor-toggle>
+                <span class="floor-swatch" aria-hidden="true"></span>
+                <span>Lucky</span>
+                <small>12/12/12</small>
+              </label>
+              <label class="floor-option" style="--series-color: #487a6f;">
+                <input type="checkbox" value="goodFriend" data-floor-toggle>
+                <span class="floor-swatch" aria-hidden="true"></span>
+                <span>Good friend</span>
+                <small>1/1/1</small>
+              </label>
+              <label class="floor-option" style="--series-color: #6b8b3e;">
+                <input type="checkbox" value="greatFriend" data-floor-toggle>
+                <span class="floor-swatch" aria-hidden="true"></span>
+                <span>Great friend</span>
+                <small>2/2/2</small>
+              </label>
+              <label class="floor-option" style="--series-color: #b67633;">
+                <input type="checkbox" value="ultraFriend" data-floor-toggle>
+                <span class="floor-swatch" aria-hidden="true"></span>
+                <span>Ultra friend</span>
+                <small>3/3/3</small>
+              </label>
+              <label class="floor-option" style="--series-color: #a85f70;">
+                <input type="checkbox" value="bestFriend" data-floor-toggle>
+                <span class="floor-swatch" aria-hidden="true"></span>
+                <span>Best friend</span>
+                <small>4/4/4</small>
+              </label>
+            </div>
+          </div>
         </fieldset>
 
         <fieldset class="shiny-options" id="shinyOptions" aria-label="Shiny odds">
           <legend>Shiny</legend>
           <label class="shiny-toggle">
             <input id="shinyEnabled" type="checkbox">
-            <span>Include shiny odds</span>
+            <span>Display shiny chance</span>
           </label>
           <label class="shiny-rate" id="wildRateControl">
-            <span>Wild/weather rate</span>
+            <span>Shiny encounter rate</span>
             <span class="rate-slider">
               <span>1/512</span>
               <input id="wildRateSlider" type="range" min="0" max="5" step="1" value="0" list="wildRateTicks">

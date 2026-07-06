@@ -2,7 +2,7 @@ const MAX_IV = 15;
 const STAT_COUNT = 3;
 const MAX_SUM = MAX_IV * STAT_COUNT;
 const WILD_SHINY_RATES = [512, 256, 128, 64, 32, 25];
-const REFERENCE_COLOR = "#6f55b5";
+const REFERENCE_COLOR = "#0E6C99";
 const STAR_RATINGS = [
   { label: "☆☆☆☆", minSum: 0, maxSum: 22, threshold: percentForSum(0) },
   { label: "★☆☆☆", minSum: 23, maxSum: 29, threshold: percentForSum(23) },
@@ -50,6 +50,38 @@ const FLOOR_CONFIGS = [
     color: "#b14c8f",
     fill: "rgba(177, 76, 143, 0.14)",
     dim: "rgba(177, 76, 143, 0.42)"
+  },
+  {
+    id: "goodFriend",
+    label: "Good friend",
+    floor: 1,
+    color: "#487a6f",
+    fill: "rgba(72, 122, 111, 0.14)",
+    dim: "rgba(72, 122, 111, 0.42)"
+  },
+  {
+    id: "greatFriend",
+    label: "Great friend",
+    floor: 2,
+    color: "#6b8b3e",
+    fill: "rgba(107, 139, 62, 0.14)",
+    dim: "rgba(107, 139, 62, 0.42)"
+  },
+  {
+    id: "ultraFriend",
+    label: "Ultra friend",
+    floor: 3,
+    color: "#b67633",
+    fill: "rgba(182, 118, 51, 0.14)",
+    dim: "rgba(182, 118, 51, 0.42)"
+  },
+  {
+    id: "bestFriend",
+    label: "Best friend",
+    floor: 4,
+    color: "#a85f70",
+    fill: "rgba(168, 95, 112, 0.14)",
+    dim: "rgba(168, 95, 112, 0.42)"
   }
 ];
 
@@ -70,6 +102,9 @@ const thresholdPrev = document.querySelector("#thresholdPrev");
 const thresholdNext = document.querySelector("#thresholdNext");
 const chanceModeRadios = [...document.querySelectorAll('input[name="chanceMode"]')];
 const floorToggles = [...document.querySelectorAll("[data-floor-toggle]")];
+const tradeToggle = document.querySelector("#tradeToggle");
+const tradeFloorList = document.querySelector("#tradeFloorList");
+const tradeIndicator = document.querySelector("#tradeIndicator");
 const shinyOptions = document.querySelector("#shinyOptions");
 const shinyEnabled = document.querySelector("#shinyEnabled");
 const wildRateSlider = document.querySelector("#wildRateSlider");
@@ -650,7 +685,7 @@ function drawChart() {
     ctx.restore();
   }
 
-  ctx.strokeStyle = "#d8423a";
+  ctx.strokeStyle = "#0E6C99";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(thresholdX, metrics.top);
@@ -849,6 +884,16 @@ function starRatingFromPointer(event) {
     x >= region.left && x <= region.right && y >= region.top && y <= region.bottom
   ));
 }
+
+function setTradeOpen(isOpen) {
+  tradeToggle.setAttribute("aria-expanded", String(isOpen));
+  tradeFloorList.hidden = !isOpen;
+  tradeIndicator.textContent = isOpen ? "▾" : "▸";
+}
+
+tradeToggle.addEventListener("click", () => {
+  setTradeOpen(tradeToggle.getAttribute("aria-expanded") !== "true");
+});
 
 floorToggles.forEach((toggle) => {
   toggle.addEventListener("change", () => {

@@ -8,9 +8,9 @@
   --soft: #dcebe6;
   --bar: #9dcfc1;
   --bar-strong: #1d6f64;
-  --accent: #d8423a;
-  --accent-soft: #ffe3df;
-  --reference: #6f55b5;
+  --accent: #0E6C99;
+  --accent-soft: #a9dcf4;
+  --reference: #F1860B;
   --gold: #e3a928;
   --shadow: 0 18px 55px rgba(31, 37, 35, 0.1);
 }
@@ -116,7 +116,7 @@ h2 {
 }
 
 .chance-value {
-  color: var(--ink);
+  color: var(--accent);
   font-size: 1rem;
   font-weight: 900;
 }
@@ -234,7 +234,7 @@ h2 {
 }
 
 .attempts-row output {
-  color: var(--ink);
+  color: var(--accent);
   font-size: 1rem;
   font-weight: 900;
 }
@@ -396,6 +396,7 @@ h2 {
 .floor-options legend,
 .shiny-options legend {
   margin-right: 2px;
+  margin-bottom: 6px;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
@@ -411,6 +412,58 @@ h2 {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.trade-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.trade-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.trade-toggle:hover,
+.trade-toggle:focus-visible {
+  color: var(--accent);
+  outline: none;
+}
+
+.trade-indicator {
+  display: inline-grid;
+  width: 12px;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.trade-toggle small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.trade-floor-list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.trade-floor-list[hidden] {
+  display: none;
 }
 
 .floor-option input,
