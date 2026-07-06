@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pokemon Go IV Odds</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div>
+          <h1>IV Chances</h1>
+        </div>
+      </header>
+
+      <section class="graph-panel" aria-label="IV percentage distribution">
+        <div class="chart-frame">
+          <canvas id="chart" aria-label="Graph of IV percentage relative frequencies"></canvas>
+          <div class="threshold-control" id="thresholdControl" aria-label="Selected IV percentage">
+            <button class="threshold-arrow" id="thresholdPrev" type="button" title="Previous IV percentage" aria-label="Previous IV percentage">&lt;</button>
+            <output id="thresholdOutput">91%</output>
+            <button class="threshold-arrow" id="thresholdNext" type="button" title="Next IV percentage" aria-label="Next IV percentage">&gt;</button>
+          </div>
+        </div>
+
+        <fieldset class="chance-mode" aria-label="Chance range">
+          <label>
+            <input type="radio" name="chanceMode" value="higher" checked>
+            <span>or higher</span>
+          </label>
+          <label>
+            <input type="radio" name="chanceMode" value="exact">
+            <span>exactly</span>
+          </label>
+          <label>
+            <input type="radio" name="chanceMode" value="lower">
+            <span>or lower</span>
+          </label>
+        </fieldset>
+
+        <div class="chance" aria-live="polite">
+          <span class="chance-title">Chance of 91% or higher</span>
+          <div class="reference-row" id="referenceRow" hidden></div>
+          <div class="chance-list" id="chanceList"></div>
+        </div>
+
+        <fieldset class="floor-options" aria-label="IV floor overlays">
+          <legend>IV floors</legend>
+          <label class="floor-option" style="--series-color: #d39b1f;">
+            <input type="checkbox" value="weather" data-floor-toggle>
+            <span class="floor-swatch" aria-hidden="true"></span>
+            <span>Weather boost</span>
+            <small>4/4/4</small>
+          </label>
+          <label class="floor-option" style="--series-color: #416fbd;">
+            <input type="checkbox" value="raid" data-floor-toggle>
+            <span class="floor-swatch" aria-hidden="true"></span>
+            <span>Raid</span>
+            <small>10/10/10</small>
+          </label>
+          <label class="floor-option" style="--series-color: #b14c8f;">
+            <input type="checkbox" value="lucky" data-floor-toggle>
+            <span class="floor-swatch" aria-hidden="true"></span>
+            <span>Lucky</span>
+            <small>12/12/12</small>
+          </label>
+        </fieldset>
+
+        <fieldset class="shiny-options" id="shinyOptions" aria-label="Shiny odds">
+          <legend>Shiny</legend>
+          <label class="shiny-toggle">
+            <input id="shinyEnabled" type="checkbox">
+            <span>Include shiny odds</span>
+          </label>
+          <label class="shiny-rate" id="wildRateControl">
+            <span>Wild/weather rate</span>
+            <span class="rate-slider">
+              <span>1/512</span>
+              <input id="wildRateSlider" type="range" min="0" max="5" step="1" value="0" list="wildRateTicks">
+              <span>1/25</span>
+            </span>
+            <datalist id="wildRateTicks">
+              <option value="0"></option>
+              <option value="1"></option>
+              <option value="2"></option>
+              <option value="3"></option>
+              <option value="4"></option>
+              <option value="5"></option>
+            </datalist>
+          </label>
+          <label class="raid-boost" id="raidBoostControl">
+            <input id="raidBoosted" type="checkbox">
+            <span>Raid shiny boosted</span>
+          </label>
+          <span class="shiny-current" id="shinyRateOutput">Off</span>
+        </fieldset>
+      </section>
+
+      <section class="attempts-panel" id="attemptsPanel" aria-label="Pinned chance across multiple attempts" hidden>
+        <h2>Attempts</h2>
+        <p class="attempts-basis" id="attemptsBasis"></p>
+        <div class="attempts-list">
+          <label class="attempts-row">
+            <span>Chance after</span>
+            <input id="attemptsInput" type="number" min="1" max="1000000" step="1" value="100" inputmode="numeric">
+            <span>attempts</span>
+            <output id="attemptsChanceOutput">0%</output>
+          </label>
+          <label class="attempts-row">
+            <span>Attempts for</span>
+            <input id="targetChanceInput" type="number" min="0" max="100" step="1" value="50" inputmode="decimal">
+            <span>% chance</span>
+            <output id="requiredAttemptsOutput">0 attempts</output>
+          </label>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>
