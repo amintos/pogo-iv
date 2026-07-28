@@ -126,6 +126,14 @@ const ivIndicator = document.querySelector("#ivIndicator");
 const ivSummary = document.querySelector("#ivSummary");
 const ivInputs = [...document.querySelectorAll("[data-iv-stat]")];
 const ivOutputs = [...document.querySelectorAll("[data-iv-output]")];
+const pokemonSearch = document.querySelector("#pokemonSearch");
+const pokemonOptions = document.querySelector("#pokemonOptions");
+const pokemonSearchStatus = document.querySelector("#pokemonSearchStatus");
+const levelSettings = document.querySelector("#levelSettings");
+const levelSlider = document.querySelector("#levelSlider");
+const levelInput = document.querySelector("#levelInput");
+const levelPresets = [...document.querySelectorAll("[data-level]")];
+const cpOutput = document.querySelector("#cpOutput");
 
 const distributions = FLOOR_CONFIGS.map(createDistribution);
 const distributionById = Object.fromEntries(distributions.map((distribution) => [distribution.id, distribution]));
@@ -146,8 +154,18 @@ const state = {
     enabled: false,
     wildRateIndex: 0,
     raidBoosted: false
+  },
+  pokemon: {
+    all: [],
+    selected: null,
+    cpMultipliers: {},
+    level: 20,
+    loaded: false
   }
 };
+
+let pokemonMatches = [];
+let activePokemonOption = -1;
 
 function percentForSum(sum) {
   return Math.round((sum / MAX_SUM) * 100);
@@ -184,6 +202,228 @@ function createDistribution(config) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeLevel(value) {
+  return Math.round(clamp(Number(value), 1, 50) * 2) / 2;
+}
+
+function pokemonName(name) {
+  return name
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function pokemonLabel(pokemon) {
+  return `#${String(pokemon.number).padStart(4, "0")} ${pokemonName(pokemon.name)}`;
+}
+
+function calculateCp(pokemon, ivs, level) {
+  const multiplier = state.pokemon.cpMultipliers[String(level)];
+
+  if (!pokemon || !Number.isFinite(multiplier)) {
+    return null;
+  }
+
+  const [attackIv, defenseIv, staminaIv] = ivs;
+  return Math.floor(
+    ((pokemon.attack + attackIv)
+      * Math.sqrt(pokemon.defense + defenseIv)
+      * Math.sqrt(pokemon.stamina + staminaIv)
+      * (multiplier ** 2)) / 10
+  );
+}
+
+function updatePokemonOutput() {
+  const pokemon = state.pokemon.selected;
+  levelSettings.hidden = !pokemon;
+  cpOutput.hidden = !pokemon;
+
+  if (!pokemon) {
+    cpOutput.textContent = "";
+    return;
+  }
+
+  const cp = calculateCp(pokemon, state.ivValues, state.pokemon.level);
+  cpOutput.textContent = cp === null ? "CP unavailable" : `CP ${cp.toLocaleString()}`;
+  cpOutput.title = `${pokemonLabel(pokemon)} at level ${state.pokemon.level}, IVs ${state.ivValues.join("/")}`;
+  cpOutput.setAttribute("aria-label", cp === null ? "CP unavailable" : `Combat Power ${cp}`);
+  levelSlider.value = String(state.pokemon.level);
+  levelInput.value = String(state.pokemon.level);
+  levelPresets.forEach((button) => {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.level) === state.pokemon.level));
+  });
+}
+
+function closePokemonOptions() {
+  pokemonOptions.hidden = true;
+  pokemonSearch.setAttribute("aria-expanded", "false");
+  pokemonSearch.removeAttribute("aria-activedescendant");
+  activePokemonOption = -1;
+}
+
+function setActivePokemonOption(index) {
+  const options = [...pokemonOptions.querySelectorAll(".pokemon-option")];
+
+  if (options.length === 0) {
+    return;
+  }
+
+  activePokemonOption = (index + options.length) % options.length;
+  options.forEach((option, optionIndex) => {
+    option.setAttribute("aria-selected", String(optionIndex === activePokemonOption));
+  });
+  const active = options[activePokemonOption];
+  pokemonSearch.setAttribute("aria-activedescendant", active.id);
+  active.scrollIntoView({ block: "nearest" });
+}
+
+function selectPokemon(pokemon) {
+  state.pokemon.selected = pokemon;
+  pokemonSearch.value = pokemon ? pokemonLabel(pokemon) : "";
+  pokemonSearchStatus.textContent = pokemon
+    ? `${pokemon.attack} Attack · ${pokemon.defense} Defense · ${pokemon.stamina} Stamina`
+    : "No Pokémon selected — showing IV odds only.";
+  closePokemonOptions();
+  updatePokemonOutput();
+}
+
+function renderPokemonOptions(matches) {
+  pokemonMatches = matches;
+  const choices = [null, ...matches];
+
+  pokemonOptions.replaceChildren(...choices.map((pokemon, index) => {
+    const option = document.createElement("button");
+    const number = document.createElement("small");
+    const name = document.createElement("strong");
+
+    option.type = "button";
+    option.className = "pokemon-option";
+    option.id = `pokemon-option-${index}`;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", "false");
+    number.textContent = pokemon ? `#${String(pokemon.number).padStart(4, "0")}` : "None";
+    name.textContent = pokemon ? pokemonName(pokemon.name) : "IV odds only";
+    option.append(number, name);
+    option.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      selectPokemon(pokemon);
+    });
+    return option;
+  }));
+
+  pokemonOptions.hidden = false;
+  pokemonSearch.setAttribute("aria-expanded", "true");
+  activePokemonOption = -1;
+}
+
+function searchPokemon() {
+  if (!state.pokemon.loaded) {
+    return;
+  }
+
+  const query = pokemonSearch.value.trim();
+  const selectedLabel = state.pokemon.selected ? pokemonLabel(state.pokemon.selected) : "";
+
+  if (query === selectedLabel) {
+    pokemonSearchStatus.textContent = `${state.pokemon.selected.attack} Attack · ${state.pokemon.selected.defense} Defense · ${state.pokemon.selected.stamina} Stamina`;
+    renderPokemonOptions([state.pokemon.selected]);
+    return;
+  }
+
+  const normalizedName = query.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+  const numberQuery = /^\d+$/.test(query) ? Number(query) : null;
+  const matches = query
+    ? state.pokemon.all.filter((pokemon) => (
+      (numberQuery !== null && pokemon.number === numberQuery)
+      || pokemon.name.includes(normalizedName)
+    ))
+    : [];
+
+  pokemonSearchStatus.textContent = query
+    ? `${matches.length} ${matches.length === 1 ? "match" : "matches"}`
+    : (state.pokemon.selected
+      ? `${state.pokemon.selected.attack} Attack · ${state.pokemon.selected.defense} Defense · ${state.pokemon.selected.stamina} Stamina`
+      : "No Pokémon selected — showing IV odds only.");
+  renderPokemonOptions(matches);
+}
+
+function applyPokemonData(pokemonRows, cpMultipliers) {
+  state.pokemon.all = pokemonRows.map(([id, number, name, attack, defense, stamina]) => ({
+    id,
+    number,
+    name,
+    attack,
+    defense,
+    stamina
+  }));
+  state.pokemon.cpMultipliers = cpMultipliers;
+  state.pokemon.loaded = true;
+  pokemonSearch.disabled = false;
+  pokemonSearchStatus.textContent = "No Pokémon selected — showing IV odds only.";
+}
+
+function loadOfflinePokemonData() {
+  return new Promise((resolve, reject) => {
+    if (window.POGO_OFFLINE_DATA) {
+      resolve(window.POGO_OFFLINE_DATA);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "offline-data.js";
+    script.onload = () => {
+      if (window.POGO_OFFLINE_DATA) {
+        resolve(window.POGO_OFFLINE_DATA);
+      } else {
+        reject(new Error("Offline Pokémon data is invalid."));
+      }
+    };
+    script.onerror = () => reject(new Error("Offline Pokémon data could not be loaded."));
+    document.head.append(script);
+  });
+}
+
+async function loadPokemonData() {
+  try {
+    let pokemonRows;
+    let cpMultipliers;
+
+    if (window.location.protocol === "file:") {
+      const offlineData = await loadOfflinePokemonData();
+      pokemonRows = offlineData.pokemon;
+      cpMultipliers = offlineData.cpMultipliers;
+    } else {
+      try {
+        const [pokemonResponse, multiplierResponse] = await Promise.all([
+          fetch("pokemon.json"),
+          fetch("cp-multipliers.json")
+        ]);
+
+        if (!pokemonResponse.ok || !multiplierResponse.ok) {
+          throw new Error("Pokémon JSON data could not be loaded.");
+        }
+
+        [pokemonRows, cpMultipliers] = await Promise.all([
+          pokemonResponse.json(),
+          multiplierResponse.json()
+        ]);
+      } catch (fetchError) {
+        console.warn("Using offline Pokémon data fallback.", fetchError);
+        const offlineData = await loadOfflinePokemonData();
+        pokemonRows = offlineData.pokemon;
+        cpMultipliers = offlineData.cpMultipliers;
+      }
+    }
+
+    applyPokemonData(pokemonRows, cpMultipliers);
+  } catch (error) {
+    pokemonSearch.disabled = true;
+    pokemonSearchStatus.textContent = "Pokémon data unavailable.";
+    console.error(error);
+  }
 }
 
 function minSumForThreshold(threshold) {
@@ -559,13 +799,19 @@ function updateStats() {
   thresholdPrev.disabled = thresholdIndex() === 0;
   thresholdNext.disabled = thresholdIndex() === meaningfulThresholds.length - 1;
   ivInputs.forEach((input, index) => {
-    input.value = String(state.ivValues[index]);
-    input.setAttribute("aria-valuetext", `${state.ivValues[index]} out of ${MAX_IV}`);
+    const value = state.ivValues[index];
+    const bar = input.closest(".iv-bar");
+
+    input.value = String(value);
+    input.setAttribute("aria-valuetext", `${value} out of ${MAX_IV}`);
+    bar.style.setProperty("--iv-fill", `${(value / MAX_IV) * 100}%`);
+    bar.dataset.perfect = String(value === MAX_IV);
   });
   ivOutputs.forEach((output, index) => {
     output.textContent = String(state.ivValues[index]);
   });
   ivSummary.textContent = state.ivValues.join(" / ");
+  updatePokemonOutput();
   chanceModeRadios.forEach((radio) => {
     radio.checked = radio.value === state.chanceMode;
   });
@@ -973,6 +1219,65 @@ ivInputs.forEach((input, index) => {
   });
 });
 
+pokemonSearch.disabled = true;
+pokemonSearch.addEventListener("input", searchPokemon);
+pokemonSearch.addEventListener("focus", searchPokemon);
+pokemonSearch.addEventListener("keydown", (event) => {
+  const options = [...pokemonOptions.querySelectorAll(".pokemon-option")];
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    setActivePokemonOption(activePokemonOption + 1);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    setActivePokemonOption(activePokemonOption - 1);
+  } else if (event.key === "Enter" && activePokemonOption >= 0) {
+    event.preventDefault();
+    const pokemon = activePokemonOption === 0 ? null : pokemonMatches[activePokemonOption - 1];
+    selectPokemon(pokemon);
+  } else if (event.key === "Escape") {
+    pokemonSearch.value = state.pokemon.selected ? pokemonLabel(state.pokemon.selected) : "";
+    closePokemonOptions();
+  } else if (event.key === "Tab" && options.length > 0) {
+    closePokemonOptions();
+  }
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (!event.target.closest(".combobox")) {
+    closePokemonOptions();
+  }
+});
+
+function setPokemonLevel(value) {
+  if (!Number.isFinite(Number(value))) {
+    return;
+  }
+
+  state.pokemon.level = normalizeLevel(value);
+  updatePokemonOutput();
+}
+
+levelSlider.addEventListener("input", () => {
+  setPokemonLevel(levelSlider.value);
+});
+
+levelInput.addEventListener("input", () => {
+  if (levelInput.value !== "") {
+    setPokemonLevel(levelInput.value);
+  }
+});
+
+levelInput.addEventListener("change", () => {
+  setPokemonLevel(levelInput.value || state.pokemon.level);
+});
+
+levelPresets.forEach((button) => {
+  button.addEventListener("click", () => {
+    setPokemonLevel(button.dataset.level);
+  });
+});
+
 tradeToggle.addEventListener("click", () => {
   setTradeOpen(tradeToggle.getAttribute("aria-expanded") !== "true");
 });
@@ -1062,3 +1367,4 @@ chart.addEventListener("pointermove", (event) => {
 new ResizeObserver(drawChart).observe(chart);
 updateStats();
 drawChart();
+loadPokemonData();
