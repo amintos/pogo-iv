@@ -44,6 +44,14 @@ const FLOOR_CONFIGS = [
     dim: "rgba(112, 85, 168, 0.42)"
   },
   {
+    id: "mighty",
+    label: "Mighty",
+    floor: 13,
+    color: "#e87516",
+    fill: "rgba(232, 117, 22, 0.14)",
+    dim: "rgba(232, 117, 22, 0.42)"
+  },
+  {
     id: "lucky",
     label: "Lucky",
     floor: 12,
