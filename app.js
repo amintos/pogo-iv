@@ -244,15 +244,15 @@ function calculateCp(pokemon, ivs, level) {
   );
 }
 
-function calculateCpRange(pokemon, ivSum, level) {
+function calculateCpRange(pokemon, ivSum, level, ivFloor = 0) {
   let minimum = Infinity;
   let maximum = -Infinity;
 
-  for (let attackIv = 0; attackIv <= MAX_IV; attackIv += 1) {
-    for (let defenseIv = 0; defenseIv <= MAX_IV; defenseIv += 1) {
+  for (let attackIv = ivFloor; attackIv <= MAX_IV; attackIv += 1) {
+    for (let defenseIv = ivFloor; defenseIv <= MAX_IV; defenseIv += 1) {
       const staminaIv = ivSum - attackIv - defenseIv;
 
-      if (staminaIv < 0 || staminaIv > MAX_IV) {
+      if (staminaIv < ivFloor || staminaIv > MAX_IV) {
         continue;
       }
 
@@ -266,6 +266,69 @@ function calculateCpRange(pokemon, ivSum, level) {
   }
 
   return Number.isFinite(minimum) ? { minimum, maximum } : null;
+}
+
+function cpRangeText(range) {
+  if (!range) {
+    return "not encountered";
+  }
+
+  const minimum = range.minimum.toLocaleString();
+  const maximum = range.maximum.toLocaleString();
+  return range.minimum === range.maximum
+    ? `CP ${minimum}`
+    : `CP ${minimum}–${maximum}`;
+}
+
+function cpRangesMatch(first, second) {
+  return Boolean(
+    first
+    && second
+    && first.minimum === second.minimum
+    && first.maximum === second.maximum
+  );
+}
+
+function renderCpRanges(pokemon, ivSum) {
+  const wildRange = calculateCpRange(pokemon, ivSum, state.pokemon.level);
+  const ranges = activeDistributions()
+    .map((distribution) => ({
+      distribution,
+      range: calculateCpRange(pokemon, ivSum, state.pokemon.level, distribution.floor)
+    }))
+    .filter(({ distribution, range }) => (
+      distribution.id === "wild"
+      || !range
+      || !cpRangesMatch(range, wildRange)
+    ));
+
+  const rows = ranges.map(({ distribution, range }) => {
+    const row = document.createElement("span");
+    const dot = document.createElement("span");
+    const value = document.createElement("span");
+
+    row.className = "cp-range-row";
+    row.style.setProperty("--series-color", distribution.color);
+    dot.className = "cp-range-dot";
+    dot.setAttribute("aria-hidden", "true");
+    value.className = "cp-range-value";
+    value.textContent = cpRangeText(range);
+    row.append(dot, value);
+    return row;
+  });
+
+  cpOutput.replaceChildren(...rows);
+  cpOutput.title = `${pokemonLabel(pokemon)} at level ${state.pokemon.level}, possible CPs for IV total ${ivSum}/${MAX_SUM}`;
+  cpOutput.setAttribute(
+    "aria-label",
+    ranges
+      .map(({ distribution, range }) => (
+        `${distribution.label}: ${range
+          ? `Combat Power ${range.minimum}${range.minimum === range.maximum ? "" : ` to ${range.maximum}`}`
+          : "not encountered"}`
+      ))
+      .join(". ")
+  );
 }
 
 function updatePokemonOutput() {
@@ -288,26 +351,7 @@ function updatePokemonOutput() {
     cpOutput.setAttribute("aria-label", cp === null ? "CP unavailable" : `Combat Power ${cp}`);
   } else {
     const ivSum = state.ivValues.reduce((total, value) => total + value, 0);
-    const range = calculateCpRange(pokemon, ivSum, state.pokemon.level);
-
-    if (!range) {
-      cpOutput.textContent = "CP unavailable";
-      cpOutput.title = "CP unavailable";
-      cpOutput.setAttribute("aria-label", "CP unavailable");
-    } else {
-      const minimum = range.minimum.toLocaleString();
-      const maximum = range.maximum.toLocaleString();
-      cpOutput.textContent = range.minimum === range.maximum
-        ? `CP ${minimum}`
-        : `CP ${minimum}–${maximum}`;
-      cpOutput.title = `${pokemonLabel(pokemon)} at level ${state.pokemon.level}, possible CPs for IV total ${ivSum}/${MAX_SUM}`;
-      cpOutput.setAttribute(
-        "aria-label",
-        range.minimum === range.maximum
-          ? `Combat Power ${range.minimum}`
-          : `Combat Power range ${range.minimum} to ${range.maximum}`
-      );
-    }
+    renderCpRanges(pokemon, ivSum);
   }
 
   levelSlider.value = String(state.pokemon.level);

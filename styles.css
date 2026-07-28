@@ -469,7 +469,7 @@ h2 {
   left: 50%;
   z-index: 2;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
   transform: translateX(-50%);
 }
@@ -501,6 +501,10 @@ h2 {
   width: 100%;
 }
 
+#thresholdOutput {
+  width: auto;
+}
+
 .threshold-control .cp-output {
   min-width: 112px;
   height: 26px;
@@ -512,9 +516,34 @@ h2 {
 }
 
 .threshold-control .cp-output[data-mode="range"] {
+  height: auto;
+  min-height: 26px;
+  place-items: stretch;
+  gap: 2px;
+  padding: 5px 8px;
   background: #e4ece9;
   color: #4f5d58;
   box-shadow: 0 6px 16px rgba(31, 37, 35, 0.12);
+}
+
+.cp-range-row {
+  display: grid;
+  grid-template-columns: 8px auto;
+  align-items: center;
+  gap: 5px;
+  text-align: left;
+}
+
+.cp-range-value {
+  color: #596661;
+  font-weight: 400;
+}
+
+.cp-range-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--series-color);
 }
 
 .threshold-control .cp-output[hidden] {

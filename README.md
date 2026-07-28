@@ -27,7 +27,9 @@ index `number - 1` supplies the CSV name ID and translations.
    Click or drag inside the graph to select the nearest real Pokemon Go IV
    percentage. Use the small left/right arrows beside the percentage pill to
    step through exact IV sums. With the Individual IVs panel closed, the lighter
-   CP pill shows the full range possible for that IV percentage.
+   CP pill shows the full Wild range possible for that IV percentage. Selected
+   IV floors add colored rows when they narrow the range, or show **not
+   encountered** when the percentage is impossible at that floor.
 
 3. Set individual IVs when needed.
    Open **Individual IVs** below the chart to choose Attack, Defense, and
