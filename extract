@@ -1,0 +1,100 @@
+# jq commands to extract Pokémon base stats and level multpliers from the game master file:
+# https://github.com/PokeMiners/game_masters/blob/master/latest/latest.json
+
+# only if all forms are required:
+jq '
+  [
+    .[]
+    | select(.data.pokemonSettings != null)
+    | . as $record
+    | .data.pokemonSettings as $pokemon
+    | {
+        uniqueId: $record.templateId,
+        number: (
+          $record.templateId
+          | capture("^V(?<number>[0-9]{4})_POKEMON_").number
+          | tonumber
+        ),
+        name: $pokemon.pokemonId,
+        form: ($pokemon.form // null),
+        baseAttack: $pokemon.stats.baseAttack,
+        baseDefense: $pokemon.stats.baseDefense,
+        baseStamina: $pokemon.stats.baseStamina
+      }
+  ]
+  | sort_by(.number, .uniqueId)
+' latest.json > pokemon-forms.json
+
+# to get the basic .json used for pokemon selection:
+
+jq -r '
+  [
+    .[]
+    | select(
+        .data.pokemonSettings != null
+        and .data.pokemonSettings.form == null
+      )
+    | .data.pokemonSettings as $p
+    | [
+        .templateId,
+        (.templateId[1:5] | tonumber),
+        $p.pokemonId,
+        $p.stats.baseAttack,
+        $p.stats.baseDefense,
+        $p.stats.baseStamina
+      ]
+  ]
+  | sort_by(.[1])
+  | map(@json)
+  | "[\n" + join(",\n") + "\n]"
+' latest.json > pokemon.json
+
+# to get the level modifiers:
+
+jq '
+  def sq: . * .;
+
+  (
+    .[]
+    | select(.templateId == "PLAYER_LEVEL_SETTINGS")
+    | .data.playerLevel.cpMultiplier
+  ) as $cpm
+
+  | (
+      .[]
+      | select(.templateId == "POKEMON_UPGRADE_SETTINGS")
+      | .data.pokemonUpgrades
+    ) as $upgrade
+
+  | (
+      $upgrade.maxNormalUpgradeLevel
+      + $upgrade.defaultCpBoostAdditionalLevel
+    ) as $maxLevel
+
+  | [
+      range(0; $maxLevel) as $i
+
+      | {
+          key: (($i + 1) | tostring),
+          value: $cpm[$i]
+        },
+
+        (
+          if ($i + 1) < $maxLevel then
+            {
+              key: (($i + 1.5) | tostring),
+              value: (
+                (
+                  (($cpm[$i] | sq) + ($cpm[$i + 1] | sq))
+                  / 2
+                )
+                | sqrt
+              )
+            }
+          else
+            empty
+          end
+        )
+    ]
+  | from_entries
+' latest.json > cp-multipliers.json
