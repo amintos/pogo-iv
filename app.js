@@ -244,6 +244,30 @@ function calculateCp(pokemon, ivs, level) {
   );
 }
 
+function calculateCpRange(pokemon, ivSum, level) {
+  let minimum = Infinity;
+  let maximum = -Infinity;
+
+  for (let attackIv = 0; attackIv <= MAX_IV; attackIv += 1) {
+    for (let defenseIv = 0; defenseIv <= MAX_IV; defenseIv += 1) {
+      const staminaIv = ivSum - attackIv - defenseIv;
+
+      if (staminaIv < 0 || staminaIv > MAX_IV) {
+        continue;
+      }
+
+      const cp = calculateCp(pokemon, [attackIv, defenseIv, staminaIv], level);
+
+      if (cp !== null) {
+        minimum = Math.min(minimum, cp);
+        maximum = Math.max(maximum, cp);
+      }
+    }
+  }
+
+  return Number.isFinite(minimum) ? { minimum, maximum } : null;
+}
+
 function updatePokemonOutput() {
   const pokemon = state.pokemon.selected;
   levelSettings.hidden = !pokemon;
@@ -254,10 +278,38 @@ function updatePokemonOutput() {
     return;
   }
 
-  const cp = calculateCp(pokemon, state.ivValues, state.pokemon.level);
-  cpOutput.textContent = cp === null ? "CP unavailable" : `CP ${cp.toLocaleString()}`;
-  cpOutput.title = `${pokemonLabel(pokemon)} at level ${state.pokemon.level}, IVs ${state.ivValues.join("/")}`;
-  cpOutput.setAttribute("aria-label", cp === null ? "CP unavailable" : `Combat Power ${cp}`);
+  const exactMode = ivToggle.getAttribute("aria-expanded") === "true";
+  cpOutput.dataset.mode = exactMode ? "exact" : "range";
+
+  if (exactMode) {
+    const cp = calculateCp(pokemon, state.ivValues, state.pokemon.level);
+    cpOutput.textContent = cp === null ? "CP unavailable" : `CP ${cp.toLocaleString()}`;
+    cpOutput.title = `${pokemonLabel(pokemon)} at level ${state.pokemon.level}, IVs ${state.ivValues.join("/")}`;
+    cpOutput.setAttribute("aria-label", cp === null ? "CP unavailable" : `Combat Power ${cp}`);
+  } else {
+    const ivSum = state.ivValues.reduce((total, value) => total + value, 0);
+    const range = calculateCpRange(pokemon, ivSum, state.pokemon.level);
+
+    if (!range) {
+      cpOutput.textContent = "CP unavailable";
+      cpOutput.title = "CP unavailable";
+      cpOutput.setAttribute("aria-label", "CP unavailable");
+    } else {
+      const minimum = range.minimum.toLocaleString();
+      const maximum = range.maximum.toLocaleString();
+      cpOutput.textContent = range.minimum === range.maximum
+        ? `CP ${minimum}`
+        : `CP ${minimum}–${maximum}`;
+      cpOutput.title = `${pokemonLabel(pokemon)} at level ${state.pokemon.level}, possible CPs for IV total ${ivSum}/${MAX_SUM}`;
+      cpOutput.setAttribute(
+        "aria-label",
+        range.minimum === range.maximum
+          ? `Combat Power ${range.minimum}`
+          : `Combat Power range ${range.minimum} to ${range.maximum}`
+      );
+    }
+  }
+
   levelSlider.value = String(state.pokemon.level);
   levelInput.value = String(state.pokemon.level);
   levelPresets.forEach((button) => {
@@ -1312,6 +1364,7 @@ function setIvControlsOpen(isOpen) {
   ivToggle.setAttribute("aria-expanded", String(isOpen));
   ivControls.hidden = !isOpen;
   ivIndicator.textContent = isOpen ? "▾" : "▸";
+  updatePokemonOutput();
 }
 
 ivToggle.addEventListener("click", () => {

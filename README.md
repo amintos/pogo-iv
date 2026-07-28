@@ -26,13 +26,15 @@ index `number - 1` supplies the CSV name ID and translations.
 2. Choose an IV threshold on the chart.
    Click or drag inside the graph to select the nearest real Pokemon Go IV
    percentage. Use the small left/right arrows beside the percentage pill to
-   step through exact IV sums.
+   step through exact IV sums. With the Individual IVs panel closed, the lighter
+   CP pill shows the full range possible for that IV percentage.
 
 3. Set individual IVs when needed.
    Open **Individual IVs** below the chart to choose Attack, Defense, and
    Stamina from 0 to 15. Changing a stat selects its exact IV percentage.
    Changing the percentage balances the stats one point at a time; open or
-   close the controls without losing the selected values.
+   close the controls without losing the selected values. While the panel is
+   open, the dark CP pill shows the exact CP for the displayed IV triplet.
 
 4. Jump by appraisal stars.
    Click a star-rating band on the x-axis to jump to that band's lower bound:
