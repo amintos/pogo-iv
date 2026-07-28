@@ -5,19 +5,23 @@ Pokemon at, above, or below a selected IV percentage.
 
 Open `index.html` directly or serve the directory with any static web server.
 When opened from the file system, `offline-data.js` supplies a browser-compatible
-fallback for `pokemon.json` and `cp-multipliers.json`. There are no JavaScript
-dependencies and no build step.
+fallback for `pokemon.json`, `cp-multipliers.json`, and the English, German, and
+Japanese translations from `names.csv`. There are no JavaScript dependencies
+and no build step.
 
-After changing either JSON data file, run `node generate-offline-data.js` to
-refresh the generated fallback.
+After changing either JSON data file or `names.csv`, run
+`node generate-offline-data.js` to refresh the generated fallback. Translation
+rows are joined to Pokémon through their National Pokédex number; the CSV row at
+index `number - 1` supplies the CSV name ID and translations.
 
 ## Quick Tutorial
 
 1. Optionally choose a Pokémon.
-   Search by its exact Pokédex number or any part of its name. Selecting a
-   Pokémon reveals the level controls and adds its calculated CP below the
-   selected IV percentage. Use the Research, Raid/Egg, and weather-boosted Raid
-   buttons for common encounter levels.
+   Search by its exact Pokédex number or any part of its English, German, or
+   Japanese name. Results show all three names together. Selecting a Pokémon
+   reveals the level controls and adds its calculated CP below the selected IV
+   percentage. Use the Research, Raid/Egg, and weather-boosted Raid buttons for
+   common encounter levels.
 
 2. Choose an IV threshold on the chart.
    Click or drag inside the graph to select the nearest real Pokemon Go IV

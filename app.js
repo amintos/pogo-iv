@@ -217,7 +217,15 @@ function pokemonName(name) {
 }
 
 function pokemonLabel(pokemon) {
-  return `#${String(pokemon.number).padStart(4, "0")} ${pokemonName(pokemon.name)}`;
+  return `#${String(pokemon.number).padStart(4, "0")} ${pokemon.names.en}`;
+}
+
+function normalizeSearchName(name) {
+  return name
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
 function calculateCp(pokemon, ivs, level) {
@@ -297,7 +305,11 @@ function renderPokemonOptions(matches) {
   pokemonOptions.replaceChildren(...choices.map((pokemon, index) => {
     const option = document.createElement("button");
     const number = document.createElement("small");
-    const name = document.createElement("strong");
+    const names = document.createElement("span");
+    const englishName = document.createElement("strong");
+    const translatedNames = document.createElement("small");
+    const germanName = document.createElement("span");
+    const japaneseName = document.createElement("span");
 
     option.type = "button";
     option.className = "pokemon-option";
@@ -305,8 +317,21 @@ function renderPokemonOptions(matches) {
     option.setAttribute("role", "option");
     option.setAttribute("aria-selected", "false");
     number.textContent = pokemon ? `#${String(pokemon.number).padStart(4, "0")}` : "None";
-    name.textContent = pokemon ? pokemonName(pokemon.name) : "IV odds only";
-    option.append(number, name);
+    names.className = "pokemon-option-names";
+    englishName.textContent = pokemon ? pokemon.names.en : "IV odds only";
+    names.append(englishName);
+
+    if (pokemon) {
+      translatedNames.className = "pokemon-option-translations";
+      germanName.lang = "de";
+      germanName.textContent = pokemon.names.de;
+      japaneseName.lang = "ja";
+      japaneseName.textContent = pokemon.names.ja;
+      translatedNames.append(germanName, japaneseName);
+      names.append(translatedNames);
+    }
+
+    option.append(number, names);
     option.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       selectPokemon(pokemon);
@@ -333,12 +358,12 @@ function searchPokemon() {
     return;
   }
 
-  const normalizedName = query.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+  const normalizedName = normalizeSearchName(query);
   const numberQuery = /^\d+$/.test(query) ? Number(query) : null;
   const matches = query
     ? state.pokemon.all.filter((pokemon) => (
       (numberQuery !== null && pokemon.number === numberQuery)
-      || pokemon.name.includes(normalizedName)
+      || pokemon.searchNames.some((name) => name.includes(normalizedName))
     ))
     : [];
 
@@ -350,19 +375,93 @@ function searchPokemon() {
   renderPokemonOptions(matches);
 }
 
-function applyPokemonData(pokemonRows, cpMultipliers) {
+function applyPokemonData(pokemonRows, cpMultipliers, namesByPokemonId) {
   state.pokemon.all = pokemonRows.map(([id, number, name, attack, defense, stamina]) => ({
     id,
     number,
     name,
     attack,
     defense,
-    stamina
+    stamina,
+    names: namesByPokemonId[id] || {
+      csvId: null,
+      en: pokemonName(name),
+      de: "",
+      ja: ""
+    }
+  })).map((pokemon) => ({
+    ...pokemon,
+    searchNames: [
+      pokemon.names.en,
+      pokemon.names.de,
+      pokemon.names.ja
+    ].filter(Boolean).map(normalizeSearchName)
   }));
   state.pokemon.cpMultipliers = cpMultipliers;
   state.pokemon.loaded = true;
   pokemonSearch.disabled = false;
   pokemonSearchStatus.textContent = "No Pokémon selected — showing IV odds only.";
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+
+    if (quoted) {
+      if (character === '"' && text[index + 1] === '"') {
+        field += '"';
+        index += 1;
+      } else if (character === '"') {
+        quoted = false;
+      } else {
+        field += character;
+      }
+    } else if (character === '"') {
+      quoted = true;
+    } else if (character === ",") {
+      row.push(field);
+      field = "";
+    } else if (character === "\n") {
+      row.push(field.replace(/\r$/, ""));
+      rows.push(row);
+      row = [];
+      field = "";
+    } else {
+      field += character;
+    }
+  }
+
+  if (field || row.length) {
+    row.push(field.replace(/\r$/, ""));
+    rows.push(row);
+  }
+
+  const headers = rows.shift();
+  return rows
+    .filter((values) => values.some(Boolean))
+    .map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] || ""])));
+}
+
+function mapPokemonNames(pokemonRows, translatedNameRows) {
+  return Object.fromEntries(pokemonRows.map(([pokemonId, number]) => {
+    const names = translatedNameRows[number - 1];
+
+    if (!names) {
+      return [pokemonId, null];
+    }
+
+    return [pokemonId, {
+      csvId: names.key,
+      en: names.en,
+      de: names.de,
+      ja: names.ja
+    }];
+  }));
 }
 
 function loadOfflinePokemonData() {
@@ -390,35 +489,43 @@ async function loadPokemonData() {
   try {
     let pokemonRows;
     let cpMultipliers;
+    let namesByPokemonId;
 
     if (window.location.protocol === "file:") {
       const offlineData = await loadOfflinePokemonData();
       pokemonRows = offlineData.pokemon;
       cpMultipliers = offlineData.cpMultipliers;
+      namesByPokemonId = offlineData.names;
     } else {
       try {
-        const [pokemonResponse, multiplierResponse] = await Promise.all([
+        const [pokemonResponse, multiplierResponse, namesResponse] = await Promise.all([
           fetch("pokemon.json"),
-          fetch("cp-multipliers.json")
+          fetch("cp-multipliers.json"),
+          fetch("names.csv")
         ]);
 
-        if (!pokemonResponse.ok || !multiplierResponse.ok) {
-          throw new Error("Pokémon JSON data could not be loaded.");
+        if (!pokemonResponse.ok || !multiplierResponse.ok || !namesResponse.ok) {
+          throw new Error("Pokémon data could not be loaded.");
         }
 
-        [pokemonRows, cpMultipliers] = await Promise.all([
+        const [loadedPokemonRows, loadedCpMultipliers, namesCsv] = await Promise.all([
           pokemonResponse.json(),
-          multiplierResponse.json()
+          multiplierResponse.json(),
+          namesResponse.text()
         ]);
+        pokemonRows = loadedPokemonRows;
+        cpMultipliers = loadedCpMultipliers;
+        namesByPokemonId = mapPokemonNames(pokemonRows, parseCsv(namesCsv));
       } catch (fetchError) {
         console.warn("Using offline Pokémon data fallback.", fetchError);
         const offlineData = await loadOfflinePokemonData();
         pokemonRows = offlineData.pokemon;
         cpMultipliers = offlineData.cpMultipliers;
+        namesByPokemonId = offlineData.names;
       }
     }
 
-    applyPokemonData(pokemonRows, cpMultipliers);
+    applyPokemonData(pokemonRows, cpMultipliers, namesByPokemonId || {});
   } catch (error) {
     pokemonSearch.disabled = true;
     pokemonSearchStatus.textContent = "Pokémon data unavailable.";
