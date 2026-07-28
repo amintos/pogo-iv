@@ -35,8 +35,9 @@ and no build step.
 
 6. Include shiny odds when needed.
    Enable shiny odds to multiply the relevant rows by the selected shiny rate.
-   Wild and Weather boost use the wild shiny slider. Raid and Shadow Raid use
-   the raid shiny setting. Trade floors are not affected by shiny odds.
+   Wild, Weather boost, and Mighty use the encounter-rate slider. Raid and
+   Shadow Raid use the raid shiny setting. Trade floors are not affected by
+   shiny odds.
 
 7. Pin a chance as a reference.
    Click the pin icon on any chance row to freeze that value. Other live rows

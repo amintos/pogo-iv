@@ -352,7 +352,7 @@ function comparisonText(probability) {
 }
 
 function shinyRateDenominator(distribution) {
-  if (distribution.id === "wild" || distribution.id === "weather") {
+  if (distribution.id === "wild" || distribution.id === "weather" || distribution.id === "mighty") {
     return WILD_SHINY_RATES[state.shiny.wildRateIndex];
   }
 
@@ -402,7 +402,7 @@ function updateShinyControls() {
   wildRateSlider.value = String(state.shiny.wildRateIndex);
   raidBoosted.checked = state.shiny.raidBoosted;
   shinyRateOutput.textContent = enabled
-    ? `Wild/weather 1 in ${wildDenominator}${raidActive ? ` · Raid 1 in ${raidDenominator}` : ""}`
+    ? `Wild/weather/mighty 1 in ${wildDenominator}${raidActive ? ` · Raid 1 in ${raidDenominator}` : ""}`
     : "Off";
   wildRateSlider.setAttribute("aria-valuetext", `1 in ${WILD_SHINY_RATES[state.shiny.wildRateIndex]}`);
   raidBoosted.setAttribute("aria-label", `Raid shiny rate ${state.shiny.raidBoosted ? "1 in 10" : "1 in 20"}`);
