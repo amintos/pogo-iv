@@ -112,6 +112,12 @@ const wildRateControl = document.querySelector("#wildRateControl");
 const raidBoosted = document.querySelector("#raidBoosted");
 const raidBoostControl = document.querySelector("#raidBoostControl");
 const shinyRateOutput = document.querySelector("#shinyRateOutput");
+const ivToggle = document.querySelector("#ivToggle");
+const ivControls = document.querySelector("#ivControls");
+const ivIndicator = document.querySelector("#ivIndicator");
+const ivSummary = document.querySelector("#ivSummary");
+const ivInputs = [...document.querySelectorAll("[data-iv-stat]")];
+const ivOutputs = [...document.querySelectorAll("[data-iv-output]")];
 
 const distributions = FLOOR_CONFIGS.map(createDistribution);
 const distributionById = Object.fromEntries(distributions.map((distribution) => [distribution.id, distribution]));
@@ -120,6 +126,7 @@ const meaningfulThresholds = [...new Set(wildDistribution.points.map((point) => 
 let starAxisHitRegions = [];
 const state = {
   threshold: snapThreshold(90),
+  ivValues: typicalIvsForSum(minSumForThreshold(snapThreshold(90))),
   chanceMode: "higher",
   pinnedReference: null,
   cumulative: {
@@ -203,6 +210,41 @@ function snapThreshold(value) {
 
 function thresholdIndex() {
   return meaningfulThresholds.indexOf(state.threshold);
+}
+
+function typicalIvsForSum(sum) {
+  const values = [0, 0, 0];
+
+  for (let currentSum = 0; currentSum < sum; currentSum += 1) {
+    const lowest = Math.min(...values);
+    const index = values.findIndex((value) => value === lowest);
+    values[index] += 1;
+  }
+
+  return values;
+}
+
+function syncIvsToSum(targetSum) {
+  let currentSum = state.ivValues.reduce((total, value) => total + value, 0);
+
+  while (currentSum < targetSum) {
+    const lowest = Math.min(...state.ivValues);
+    const index = state.ivValues.findIndex((value) => value === lowest);
+    state.ivValues[index] += 1;
+    currentSum += 1;
+  }
+
+  while (currentSum > targetSum) {
+    const highest = Math.max(...state.ivValues);
+    let index = state.ivValues.length - 1;
+
+    while (state.ivValues[index] !== highest) {
+      index -= 1;
+    }
+
+    state.ivValues[index] -= 1;
+    currentSum -= 1;
+  }
 }
 
 function activeDistributions() {
@@ -508,6 +550,14 @@ function updateStats() {
   thresholdOutput.textContent = formatPercent(state.threshold, 0);
   thresholdPrev.disabled = thresholdIndex() === 0;
   thresholdNext.disabled = thresholdIndex() === meaningfulThresholds.length - 1;
+  ivInputs.forEach((input, index) => {
+    input.value = String(state.ivValues[index]);
+    input.setAttribute("aria-valuetext", `${state.ivValues[index]} out of ${MAX_IV}`);
+  });
+  ivOutputs.forEach((output, index) => {
+    output.textContent = String(state.ivValues[index]);
+  });
+  ivSummary.textContent = state.ivValues.join(" / ");
   chanceModeRadios.forEach((radio) => {
     radio.checked = radio.value === state.chanceMode;
   });
@@ -851,14 +901,20 @@ function drawLineSegment(ctx, pointsToDraw, metrics, yMax, color, width) {
   ctx.stroke();
 }
 
-function setThreshold(value) {
+function setThreshold(value, { syncIvs = true } = {}) {
   const parsed = Number(value);
 
   if (!Number.isFinite(parsed)) {
     return;
   }
 
-  state.threshold = snapThreshold(parsed);
+  const threshold = snapThreshold(parsed);
+
+  if (syncIvs) {
+    syncIvsToSum(minSumForThreshold(threshold));
+  }
+
+  state.threshold = threshold;
   updateStats();
   drawChart();
 }
@@ -890,6 +946,24 @@ function setTradeOpen(isOpen) {
   tradeFloorList.hidden = !isOpen;
   tradeIndicator.textContent = isOpen ? "▾" : "▸";
 }
+
+function setIvControlsOpen(isOpen) {
+  ivToggle.setAttribute("aria-expanded", String(isOpen));
+  ivControls.hidden = !isOpen;
+  ivIndicator.textContent = isOpen ? "▾" : "▸";
+}
+
+ivToggle.addEventListener("click", () => {
+  setIvControlsOpen(ivToggle.getAttribute("aria-expanded") !== "true");
+});
+
+ivInputs.forEach((input, index) => {
+  input.addEventListener("input", () => {
+    state.ivValues[index] = clamp(Math.round(Number(input.value)), 0, MAX_IV);
+    const sum = state.ivValues.reduce((total, value) => total + value, 0);
+    setThreshold(percentForSum(sum), { syncIvs: false });
+  });
+});
 
 tradeToggle.addEventListener("click", () => {
   setTradeOpen(tradeToggle.getAttribute("aria-expanded") !== "true");

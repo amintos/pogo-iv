@@ -33,6 +33,31 @@
           </div>
         </div>
 
+        <div class="iv-selector">
+          <button class="iv-toggle" id="ivToggle" type="button" aria-expanded="false" aria-controls="ivControls">
+            <span class="iv-indicator" id="ivIndicator" aria-hidden="true">▸</span>
+            <span>Individual IVs</span>
+            <small id="ivSummary">14 / 14 / 13</small>
+          </button>
+          <div class="iv-controls" id="ivControls" hidden>
+            <label class="iv-control">
+              <span>Attack</span>
+              <input type="range" min="0" max="15" step="1" value="14" data-iv-stat="attack">
+              <output data-iv-output="attack">14</output>
+            </label>
+            <label class="iv-control">
+              <span>Defense</span>
+              <input type="range" min="0" max="15" step="1" value="14" data-iv-stat="defense">
+              <output data-iv-output="defense">14</output>
+            </label>
+            <label class="iv-control">
+              <span>Stamina</span>
+              <input type="range" min="0" max="15" step="1" value="13" data-iv-stat="stamina">
+              <output data-iv-output="stamina">13</output>
+            </label>
+          </div>
+        </div>
+
         <fieldset class="chance-mode" aria-label="Chance range">
           <label>
             <input type="radio" name="chanceMode" value="higher" checked>

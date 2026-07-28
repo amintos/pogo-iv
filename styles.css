@@ -353,6 +353,79 @@ h2 {
   opacity: 0.38;
 }
 
+.iv-selector {
+  margin-top: 10px;
+}
+
+.iv-toggle {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.iv-toggle:hover,
+.iv-toggle:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.iv-indicator {
+  width: 0.8em;
+  color: var(--accent);
+}
+
+.iv-toggle small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.iv-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.iv-controls[hidden] {
+  display: none;
+}
+
+.iv-control {
+  display: grid;
+  grid-template-columns: minmax(54px, auto) minmax(80px, 1fr) 24px;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.iv-control input {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.iv-control output {
+  color: var(--accent);
+  font-weight: 800;
+  text-align: right;
+}
+
 .chance-mode {
   display: inline-flex;
   gap: 2px;
@@ -565,6 +638,14 @@ h2 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     width: 100%;
+  }
+
+  .iv-toggle {
+    width: 100%;
+  }
+
+  .iv-controls {
+    grid-template-columns: 1fr;
   }
 
   .graph-panel {
