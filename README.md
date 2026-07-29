@@ -45,7 +45,9 @@ index `number - 1` supplies the CSV name ID and translations.
 5. Choose what the chance means.
    Use the range selector below the chart to compute the chance of the selected
    percentage or higher, exactly that percentage, or that percentage or lower.
-   The highlighted part of the graph follows this choice.
+   The highlighted part of the graph follows this choice. When a Pokémon is
+   selected, the Wild probability and each selected IV-floor probability also
+   show the CP interval for that same chance range and Pokémon level.
 
 6. Compare IV floors.
    Toggle IV floors such as Weather boost, Raid, Shadow Raid, and Mighty to

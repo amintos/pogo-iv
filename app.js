@@ -268,6 +268,38 @@ function calculateCpRange(pokemon, ivSum, level, ivFloor = 0) {
   return Number.isFinite(minimum) ? { minimum, maximum } : null;
 }
 
+function calculateCpIntervalRange(pokemon, ivFloor, level, threshold, chanceMode) {
+  const thresholdSum = minSumForThreshold(threshold);
+  let minimum = Infinity;
+  let maximum = -Infinity;
+
+  for (let attackIv = ivFloor; attackIv <= MAX_IV; attackIv += 1) {
+    for (let defenseIv = ivFloor; defenseIv <= MAX_IV; defenseIv += 1) {
+      for (let staminaIv = ivFloor; staminaIv <= MAX_IV; staminaIv += 1) {
+        const sum = attackIv + defenseIv + staminaIv;
+        const matches = chanceMode === "exact"
+          ? sum === thresholdSum
+          : chanceMode === "lower"
+            ? sum <= thresholdSum
+            : sum >= thresholdSum;
+
+        if (!matches) {
+          continue;
+        }
+
+        const cp = calculateCp(pokemon, [attackIv, defenseIv, staminaIv], level);
+
+        if (cp !== null) {
+          minimum = Math.min(minimum, cp);
+          maximum = Math.max(maximum, cp);
+        }
+      }
+    }
+  }
+
+  return Number.isFinite(minimum) ? { minimum, maximum } : null;
+}
+
 function cpRangeText(range) {
   if (!range) {
     return "not encountered";
@@ -391,7 +423,7 @@ function selectPokemon(pokemon) {
     ? `${pokemon.attack} Attack · ${pokemon.defense} Defense · ${pokemon.stamina} Stamina`
     : "No Pokémon selected — showing IV odds only.";
   closePokemonOptions();
-  updatePokemonOutput();
+  updateStats();
 }
 
 function renderPokemonOptions(matches) {
@@ -822,7 +854,8 @@ function shinyOddsText(distribution) {
 
 function chanceTitleText() {
   const thresholdText = formatPercent(state.threshold, 0);
-  let base = `Chance of ${thresholdText}`;
+  const subject = state.pokemon.selected ? "Chance and CP" : "Chance";
+  let base = `${subject} of ${thresholdText}`;
 
   if (state.chanceMode === "higher" && state.threshold !== 100) {
     base = `${base} or higher`;
@@ -983,6 +1016,23 @@ function updateStats() {
     });
 
     label.textContent = snapshot.label;
+
+    if (state.pokemon.selected) {
+      const cpInterval = calculateCpIntervalRange(
+        state.pokemon.selected,
+        distribution.floor,
+        state.pokemon.level,
+        state.threshold,
+        state.chanceMode
+      );
+      const cpPill = document.createElement("small");
+
+      cpPill.className = "cp-interval-pill";
+      cpPill.textContent = cpRangeText(cpInterval);
+      cpPill.title = `${distribution.label} CP interval at level ${state.pokemon.level}`;
+      label.append(cpPill);
+    }
+
     value.textContent = snapshot.valueText;
     odds.textContent = snapshot.oddsText;
 
@@ -1459,7 +1509,7 @@ function setPokemonLevel(value) {
   }
 
   state.pokemon.level = normalizeLevel(value);
-  updatePokemonOutput();
+  updateStats();
 }
 
 levelSlider.addEventListener("input", () => {
