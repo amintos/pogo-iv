@@ -1457,6 +1457,7 @@ function setTradeOpen(isOpen) {
 function setIvControlsOpen(isOpen) {
   ivToggle.setAttribute("aria-expanded", String(isOpen));
   ivControls.hidden = !isOpen;
+  ivSummary.hidden = !isOpen;
   ivIndicator.textContent = isOpen ? "▾" : "▸";
   updatePokemonOutput();
 }

@@ -992,6 +992,30 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .iv-bar,
+  .iv-bar input,
+  .iv-bar input::-webkit-slider-runnable-track,
+  .iv-bar input::-moz-range-track {
+    height: 36px;
+  }
+
+  .iv-bar::before,
+  .iv-bar::after {
+    top: 14px;
+    bottom: 14px;
+  }
+
+  .iv-bar input::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+    margin-top: 9px;
+  }
+
+  .iv-bar input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+  }
+
   .graph-panel {
     padding: 14px;
   }
